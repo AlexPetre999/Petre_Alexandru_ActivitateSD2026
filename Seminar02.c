@@ -51,7 +51,7 @@ void dezalocare(struct Film** vector, int* nrElemente) {
 	for (int i = 0; i < nrElemente; i++) {
 		free((*vector)[i].denumire);
 	}
-	free(vector);
+	free(*vector);
 	*vector = NULL;
 	*nrElemente = 0;
 }
@@ -111,7 +111,7 @@ int main() {
 	float prag = 50;
 	int dimIeftin;
 	copiazaAnumiteElemente(filme, 50, prag, &vectorIeftin, &dimIeftin);
-	afisare(vectorIeftin, dimIeftin);
+	afisareVector(vectorIeftin, dimIeftin);
 	afisare(getPrimulElementConditionat(filme, nrFilme, "Dune"));
 	dezalocare(&filme, &nrFilme);
 	return 0;
