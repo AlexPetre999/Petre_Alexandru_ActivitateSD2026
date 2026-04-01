@@ -47,6 +47,10 @@ void afisareMasina(Masina masina) {
 	printf("Serie: %c\n\n", masina.serie);
 }
 
+
+
+//STACK
+
 struct NodSimplu {
 	Masina info;
 	struct NodSimplu* next;
@@ -54,27 +58,29 @@ struct NodSimplu {
 
 typedef struct NodSimplu NodSimplu;
 
-//STACK
 //Alegeti prin ce veti reprezenta stiva si creati structura necesara acestei stive
 //putem reprezenta o stiva prin LSI, LDI sau vector
-void pushStack(/*stiva*/ Masina masina) {
+void pushStack(NodSimplu** stack, Masina masina) {
 	NodSimplu* nou = (NodSimplu*)malloc(sizeof(NodSimplu));
 	nou->info = masina;
 	nou->next = *stack;
-	stack = nou;
+	*stack = nou;
 }
 
 Masina popStack(NodSimplu** stack) {
+	Masina masina;
+	masina.id = -1;
 	if (stack != NULL) {
 		NodSimplu* aux = *stack;
-		*stack(*stack)->next;
 		masina = aux->info;
+		*stack=(*stack)->next;
+		free(aux);
 	}
 	return masina;
 }
 
 int emptyStack(NodSimplu* stack) {
-	return stack;
+	return !stack;
 }
 
 NodSimplu* citireStackMasiniDinFisier(const char* numeFisier) {
@@ -84,18 +90,29 @@ NodSimplu* citireStackMasiniDinFisier(const char* numeFisier) {
 	NodSimplu* stack = NULL;
 	FILE* fptr = fopen(numeFisier, "r");
 	while (!feof(fptr)) {
-		pushStack(&stack, citireCoadaDeMasiniDinFisier(fptr));
+		pushStack(&stack, citireMasinaDinFisier(fptr));
 	}
 	fclose(fptr);
 	return stack;
 }
 
-void dezalocareStivaDeMasini(/*stiva*/) {
+void dezalocareStivaDeMasini(NodSimplu** stack) {
 	//sunt dezalocate toate masinile si stiva de elemente
+	while (*stack) {
+		Masina masina = popStack(stack);
+		free(masina.model);
+		free(masina.numeSofer);
+	}
 }
 
-int size(/*stiva*/) {
+int size(NodSimplu* stack) {
 	//returneaza numarul de elemente din stiva
+	int k = 0;
+	while (stack) {
+		k++;
+		stack = stack->next;
+	}
+	return k;
 }
 
 //QUEUE
@@ -118,14 +135,13 @@ struct Queue {
 void enqueue(Queue* queue, Masina masina) {
 	//adauga o masina in coada
 	Nod* nod = malloc(sizeof(Nod));
-	Nod* nou;
 	nod->masina = masina;
 	nod->next = queue->start;
 	nod->prev = NULL;
 
 	if (queue->start != NULL) {
 		queue->start->prev = nod;
-	} 
+	}
 	else {
 		queue->end = nod;
 	}
@@ -134,13 +150,13 @@ void enqueue(Queue* queue, Masina masina) {
 
 Masina dequeue(Queue* queue) {
 	//extrage o masina din coada
-	Masina masina;
+	Masina masina= queue->end->masina;
 	if (queue->start == NULL) {
 		Masina masina;
 		masina.id = -1;
 		return masina;
 	}
-	Masina masina = queue->end->masina;
+	
 	if (queue->start == queue->end) {  // queue->end->prev=NULL
 		free(queue->start);
 		queue->start = NULL;
@@ -165,14 +181,23 @@ Queue citireCoadaDeMasiniDinFisier(const char* numeFisier) {
 	FILE* f = fopen(numeFisier, "r");
 	while (!feof(f)) {
 		Masina masina = citireMasinaDinFisier(f);
-		enqueue(&queue,masina);
+		enqueue(&queue, masina);
 	}
 	fclose(f);
 	return queue;
 }
 
-void dezalocareCoadaDeMasini(/*coada*/) {
+void dezalocareCoadaDeMasini(Queue* queue) {
 	//sunt dezalocate toate masinile si coada de elemente
+	while (queue->start != NULL) {
+		Masina masina = dequeue(queue);
+		if (masina.id = -1) {
+			free(masina.model);
+			free(masina.numeSofer);
+		}
+	}
+	queue->start = NULL;
+	queue->end = NULL;
 }
 
 
@@ -203,27 +228,38 @@ Masina getMasinaByID(Queue* queue, int id) {
 }
 
 float calculeazaPretTotal(NodSimplu** stack) {
-	NodSimplu* nou = NULL;
+	NodSimplu* aux = NULL;
 	float sum = 0;
 	while (*stack != NULL) {
 		Masina masina = popStack(stack);
 		sum += masina.pret;
-		pushStack(&nou, masina);
+		pushStack(&aux, masina);
 	}
-	while (nou != NULL) {
-		pushStack(stack, popStack(nou));
+	while (aux != NULL) {
+		pushStack(stack, popStack(&aux));
 	}
 	return sum;
 }
 
 int main() {
-	Queue queue= citireCoadaDeMasiniDinFisier("masini.txt");
+	Queue queue = citireCoadaDeMasiniDinFisier("masini.txt");
 	//afisareMasina(dequeue(&queue));
 	//afisareMasina(dequeue(&queue));
 
 	//queue.end = NULL;
 	//queue.start = NULL;
+	/*
 	Masina masina = getMasinaByID(&queue, 9);
+	afisareMasina(masina);
+	free(masina.model);
+	free(masina.numeSofer);
+	*/
+	//dezalocareCoadaDeMasini(&queue);
+
+	NodSimplu* stiva = citireStackMasiniDinFisier("masini.txt");
+	printf("Dimensiune stiva: %d\n", size(stiva));
+
+	Masina masina = popStack(&stiva);
 	afisareMasina(masina);
 	free(masina.model);
 	free(masina.numeSofer);
